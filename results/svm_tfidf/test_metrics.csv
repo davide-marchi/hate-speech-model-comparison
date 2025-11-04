@@ -1,0 +1,2 @@
+model,best_score_cv,train_duration_s,train_emissions_kg,test_duration_s,test_emissions_kg,accuracy,precision_macro,recall_macro,f1_macro
+svm_tfidf,0.8333318000190131,5.445981103001031,,0.08493835700028285,,0.9648052557484749,0.8661826355824497,0.8624003138892227,0.8642796183779791
