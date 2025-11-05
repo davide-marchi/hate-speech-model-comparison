@@ -1,17 +1,7 @@
 from __future__ import annotations
 
-import re
-from collections import Counter
-from typing import Iterable, Optional, Sequence
-
-import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin, ClassifierMixin
-
 import torch
 from torch import nn
-
-
-TOKEN_PATTERN = re.compile(r"\b[a-z]{2,}\b")
 
 
 class LSTMSequenceModule(nn.Module):
