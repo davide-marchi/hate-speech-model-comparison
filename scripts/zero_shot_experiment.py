@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List, Sequence
+from typing import Iterator, List, Sequence
 
 import numpy as np
 import pandas as pd
@@ -32,7 +32,7 @@ def load_pipeline():
     return pipeline("zero-shot-classification", model=MODEL_NAME)
 
 
-def batched(iterable: Sequence[str], batch_size: int) -> Sequence[List[str]]:
+def batched(iterable: Sequence[str], batch_size: int) -> Iterator[List[str]]:
     for start in range(0, len(iterable), batch_size):
         yield iterable[start : start + batch_size]
 
