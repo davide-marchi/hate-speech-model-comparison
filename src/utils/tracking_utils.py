@@ -19,6 +19,7 @@ class ExecutionStats:
     duration_seconds: float
     emissions_kg: Optional[float]
     emissions_file: Optional[Path]
+    tracker_available: bool
 
 
 def _build_tracker(task_name: str, output_dir: Path) -> Optional[EmissionsTracker]:
@@ -57,6 +58,6 @@ def run_with_tracking(
         duration_seconds=duration,
         emissions_kg=emissions,
         emissions_file=emissions_file,
+        tracker_available=tracker is not None,
     )
     return result, stats
-

@@ -5,6 +5,7 @@ from typing import List, Sequence
 
 import numpy as np
 import pandas as pd
+from tqdm.auto import tqdm
 
 from src.utils.data_utils import get_dataset_splits
 from src.utils.evaluation_utils import classification_metrics
@@ -41,10 +42,17 @@ def predict_zero_shot(
     texts: Sequence[str],
     candidate_labels: List[str],
     hypothesis_template: str,
+    *,
+    show_progress: bool = False,
 ) -> np.ndarray:
     predictions: List[int] = []
     label_to_id = {label.lower(): idx for idx, label in LABEL_MAP.items()}
     normalized_candidates = [label.lower() for label in candidate_labels]
+    progress_bar = (
+        tqdm(total=len(texts), desc="Zero-shot inference", unit="tweet")
+        if show_progress
+        else None
+    )
     for batch in batched(texts, BATCH_SIZE):
         outputs = classifier(
             batch,
@@ -59,6 +67,10 @@ def predict_zero_shot(
                     f"Predicted label '{predicted_label}' not in candidate labels."
                 )
             predictions.append(label_to_id[predicted_label])
+        if progress_bar is not None:
+            progress_bar.update(len(batch))
+    if progress_bar is not None:
+        progress_bar.close()
     return np.asarray(predictions)
 
 
@@ -76,6 +88,7 @@ def main() -> None:
     def evaluate_templates():
         records = []
         for template in templates:
+            print(f"[zero-shot] Evaluating hypothesis template: {template}")
             preds = predict_zero_shot(
                 classifier,
                 list(splits.X_val),
@@ -108,6 +121,7 @@ def main() -> None:
             list(splits.X_test),
             candidate_labels,
             best_template,
+            show_progress=True,
         )
 
     test_predictions, test_stats = run_with_tracking(

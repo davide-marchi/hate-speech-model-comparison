@@ -27,7 +27,7 @@ def _fit_grid_search(
         n_jobs=n_jobs,
         cv=predefined_split,
         refit=True,
-        verbose=0,
+        verbose=2,
     )
     grid.fit(X_train_val, y_train_val)
     return grid
