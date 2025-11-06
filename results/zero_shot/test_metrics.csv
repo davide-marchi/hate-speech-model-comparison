@@ -1,0 +1,2 @@
+model,selected_template,train_duration_s,train_emissions_kg,test_duration_s,test_emissions_kg,accuracy,precision_macro,recall_macro,f1_macro
+zero_shot,The author of this tweet is using {}.,414.49206290000075,0.0007444374119262648,442.1400334049995,0.0007863345301447404,0.05099327389332082,0.2775634702552902,0.07675680343626096,0.0765146114379373

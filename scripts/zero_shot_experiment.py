@@ -13,7 +13,7 @@ from src.utils.io_utils import save_csv
 from src.utils.tracking_utils import run_with_tracking
 
 RESULTS_DIR = Path("results/zero_shot")
-MODEL_NAME = "facebook/bart-large-mnli"
+MODEL_NAME = "typeform/distilbert-base-uncased-mnli"
 BATCH_SIZE = 16
 
 LABEL_MAP = {
@@ -54,8 +54,9 @@ def predict_zero_shot(
         else None
     )
     for batch in batched(texts, BATCH_SIZE):
+        safe_batch = [text if text.strip() else " " for text in batch]
         outputs = classifier(
-            batch,
+            safe_batch,
             candidate_labels=candidate_labels,
             hypothesis_template=hypothesis_template,
             multi_label=False,
@@ -82,7 +83,6 @@ def main() -> None:
     templates = [
         "This tweet is {}.",
         "The author of this tweet is using {}.",
-        "The tone of this tweet can be described as {}.",
     ]
 
     def evaluate_templates():
