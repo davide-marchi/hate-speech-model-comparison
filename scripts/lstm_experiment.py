@@ -6,6 +6,8 @@ from sklearn.pipeline import Pipeline
 
 try:
     from skorch.classifier import NeuralNetClassifier
+    from skorch.callbacks import EarlyStopping
+    from skorch.dataset import ValidSplit
 except ImportError as exc:  # pragma: no cover - optional dependency
     raise ImportError("skorch is required for the lstm experiment. Install skorch and torch.") from exc
 
@@ -31,28 +33,39 @@ def main() -> None:
     class_weights = torch.tensor(weights, dtype=torch.float32)
     full_batch_size = len(splits.X_train)
 
-    # Use GloVe Twitter embeddings (200d) and full-batch training.
+    # Use GloVe Twitter embeddings (100d)
     pipeline = Pipeline(
         [
             (
                 "embedseq",
                 EmbeddingSequenceTransformer(
-                    model_name="glove-twitter-200",
+                    model_name="glove-twitter-100",
                     local_path=None,  # set to local file if offline
                     binary=False,
-                    max_len=80,
+                    max_len=64,
                 ),
             ),
             (
                 "clf",
                 NeuralNetClassifier(
                     LSTMSequenceModule,
-                    module__embedding_dim=200,  # must match chosen vectors
+                    module__embedding_dim=100,  # must match chosen vectors
                     module__num_classes=len(classes),
                     criterion=nn.CrossEntropyLoss,
                     criterion__weight=class_weights,
-                    train_split=None,
-                    iterator_train__shuffle=False,
+                    train_split=ValidSplit(0.1),
+                    callbacks=[
+                        (
+                            "early_stopping",
+                            EarlyStopping(
+                                monitor="valid_loss",
+                                patience=3,
+                                threshold=0.0,
+                                lower_is_better=True,
+                            ),
+                        )
+                    ],
+                    iterator_train__shuffle=True,
                     verbose=2,
                 ),
             ),
@@ -63,9 +76,9 @@ def main() -> None:
         "embedseq__max_len": [64],
         "clf__module__hidden_size": [64],
         "clf__module__dropout": [0.3],
-        "clf__max_epochs": [12],
-        "clf__batch_size": [128],
-        "clf__lr": [1e-2],
+        "clf__max_epochs": [50],
+        "clf__batch_size": [128, 256],
+        "clf__lr": [1e-1, 1e-2],
     }
 
     experiment = run_grid_search_experiment(

@@ -1,2 +1,2 @@
 clf__batch_size,clf__lr,clf__max_epochs,clf__module__dropout,clf__module__hidden_size,embedseq__max_len
-128,0.0005,12,0.3,128,80
+128,0.1,50,0.3,64,64
