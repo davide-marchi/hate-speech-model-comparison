@@ -104,12 +104,14 @@ def get_dataset_splits(
         random_state=random_state,
     )
 
+    def _ensure_text(series: pd.Series) -> pd.Series:
+        return series.fillna("").astype(str).reset_index(drop=True)
+
     return DatasetSplits(
-        X_train=train_df[text_column].reset_index(drop=True),
+        X_train=_ensure_text(train_df[text_column]),
         y_train=train_df["label"].reset_index(drop=True),
-        X_val=val_df[text_column].reset_index(drop=True),
+        X_val=_ensure_text(val_df[text_column]),
         y_val=val_df["label"].reset_index(drop=True),
-        X_test=test_df[text_column].reset_index(drop=True),
+        X_test=_ensure_text(test_df[text_column]),
         y_test=test_df["label"].reset_index(drop=True),
     )
-
