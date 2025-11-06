@@ -29,14 +29,15 @@ def main() -> None:
     counts[counts == 0.0] = 1.0
     weights = counts.sum() / (counts.size * counts)
     class_weights = torch.tensor(weights, dtype=torch.float32)
+    full_batch_size = len(splits.X_train)
 
-    # Using GloVe 100d by default; set module__embedding_dim accordingly.
+    # Use GloVe Twitter embeddings (200d) and full-batch training.
     pipeline = Pipeline(
         [
             (
                 "embedseq",
                 EmbeddingSequenceTransformer(
-                    model_name="glove-wiki-gigaword-100",
+                    model_name="glove-twitter-200",
                     local_path=None,  # set to local file if offline
                     binary=False,
                     max_len=80,
@@ -46,24 +47,25 @@ def main() -> None:
                 "clf",
                 NeuralNetClassifier(
                     LSTMSequenceModule,
-                    module__embedding_dim=100,  # must match chosen vectors
+                    module__embedding_dim=200,  # must match chosen vectors
                     module__num_classes=len(classes),
                     criterion=nn.CrossEntropyLoss,
                     criterion__weight=class_weights,
-                    iterator_train__shuffle=True,
-                    verbose=0,
+                    train_split=None,
+                    iterator_train__shuffle=False,
+                    verbose=2,
                 ),
             ),
         ]
     )
 
     param_grid = {
-        "embedseq__max_len": [80],
-        "clf__module__hidden_size": [128],
+        "embedseq__max_len": [64],
+        "clf__module__hidden_size": [64],
         "clf__module__dropout": [0.3],
-        "clf__max_epochs": [8],
-        "clf__batch_size": [32],
-        "clf__lr": [5e-4],
+        "clf__max_epochs": [12],
+        "clf__batch_size": [128],
+        "clf__lr": [1e-2],
     }
 
     experiment = run_grid_search_experiment(
@@ -82,3 +84,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+29
