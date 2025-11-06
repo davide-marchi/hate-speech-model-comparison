@@ -1,0 +1,4 @@
+mean_fit_time,std_fit_time,mean_score_time,std_score_time,param_clf__C,param_clf__penalty,params,split0_test_score,mean_test_score,std_test_score,rank_test_score
+190.54850697517395,0.0,28.280980110168457,0.0,0.5,l2,"{'clf__C': 0.5, 'clf__penalty': 'l2'}",0.731482431991041,0.731482431991041,0.0,1
+189.41753125190735,0.0,27.77746057510376,0.0,1.0,l2,"{'clf__C': 1.0, 'clf__penalty': 'l2'}",0.7253259119458643,0.7253259119458643,0.0,3
+190.04794883728027,0.0,27.85855221748352,0.0,2.0,l2,"{'clf__C': 2.0, 'clf__penalty': 'l2'}",0.7279773229189572,0.7279773229189572,0.0,2

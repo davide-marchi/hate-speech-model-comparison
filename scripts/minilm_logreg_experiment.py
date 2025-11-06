@@ -22,16 +22,14 @@ def main() -> None:
                 "embed",
                 SentenceTransformerEncoder(
                     model_name="sentence-transformers/all-MiniLM-L6-v2",
-                    batch_size=32,
+                    batch_size=128,
                 ),
             ),
-            ("scaler", StandardScaler()),
             (
                 "clf",
                 LogisticRegression(
                     max_iter=1000,
                     class_weight="balanced",
-                    multi_class="auto",
                     solver="lbfgs",
                 ),
             ),
@@ -57,4 +55,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
