@@ -31,7 +31,6 @@ def main() -> None:
     counts[counts == 0.0] = 1.0
     weights = counts.sum() / (counts.size * counts)
     class_weights = torch.tensor(weights, dtype=torch.float32)
-    full_batch_size = len(splits.X_train)
 
     # Use GloVe Twitter embeddings (100d)
     pipeline = Pipeline(
@@ -97,4 +96,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-29

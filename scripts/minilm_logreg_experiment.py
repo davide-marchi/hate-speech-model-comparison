@@ -4,7 +4,6 @@ from pathlib import Path
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
 
 from src.models.embedding_transformer import SentenceTransformerEncoder
 from src.utils.data_utils import get_dataset_splits
