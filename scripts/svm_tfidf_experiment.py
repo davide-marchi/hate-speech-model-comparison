@@ -32,6 +32,7 @@ def main() -> None:
         "tfidf__ngram_range": [(1, 1), (1, 2)],
         "tfidf__min_df": [1, 3],
         "tfidf__max_df": [0.9],
+        "tfidf__stop_words": [None, "english"],
         "svm__C": [0.5, 1.0, 2.0],
     }
 
@@ -49,4 +50,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
