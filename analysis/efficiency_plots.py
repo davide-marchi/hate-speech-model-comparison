@@ -29,15 +29,21 @@ def _load_metrics() -> pd.DataFrame:
 
 
 def _pareto_front(f1: np.ndarray, cost: np.ndarray) -> np.ndarray:
-    """Return boolean mask of points on the Pareto front (max f1, min cost)."""
+    """Boolean mask of non-dominated points (maximize f1, minimize cost).
+
+    A point j is dominated by i if f1[i] >= f1[j] and cost[i] <= cost[j] with at least
+    one strict inequality. We keep points that are not dominated by any other point.
+    """
     n = len(f1)
+    if n == 0:
+        return np.array([], dtype=bool)
     on_front = np.ones(n, dtype=bool)
     for i in range(n):
         if not on_front[i]:
             continue
-        dominated = (f1 >= f1[i]) & (cost <= cost[i]) & ((f1 > f1[i]) | (cost < cost[i]))
-        dominated[i] = False
-        on_front[dominated] = False
+        dominated_by_i = (f1 <= f1[i]) & (cost >= cost[i]) & ((f1 < f1[i]) | (cost > cost[i]))
+        dominated_by_i[i] = False
+        on_front[dominated_by_i] = False
     return on_front
 
 
@@ -93,6 +99,69 @@ def _plot_pareto(df: pd.DataFrame, cost_col: str, out_path: Path, title: str) ->
         pass
 
 
+def _plot_grouped_bars(df: pd.DataFrame, columns: list[str], labels: list[str], title: str, y_label: str, out_path: Path) -> None:
+    try:
+        import matplotlib.pyplot as plt
+
+        names = df.get("model", df.get("results_dir", df.index.astype(str))).astype(str).tolist()
+        x = np.arange(len(names))
+        width = 0.38
+
+        vals_a = df[columns[0]].fillna(0.0).to_numpy(dtype=float)
+        vals_b = df[columns[1]].fillna(0.0).to_numpy(dtype=float)
+
+        fig, ax = plt.subplots(figsize=(max(6, len(names) * 0.8), 4))
+        rects1 = ax.bar(x - width/2, vals_a, width, label=labels[0], color="#1f77b4")
+        rects2 = ax.bar(x + width/2, vals_b, width, label=labels[1], color="#ff7f0e")
+
+        ax.set_ylabel(y_label)
+        ax.set_title(title)
+        ax.set_xticks(x, names, rotation=35, ha="right")
+        ax.legend()
+        fig.tight_layout()
+        fig.savefig(out_path, dpi=150)
+        plt.close(fig)
+    except Exception:
+        pass
+
+
+def _plot_combined_time_emissions(df: pd.DataFrame, out_path: Path) -> None:
+    """Single figure with two subplots: top=time, bottom=emissions."""
+    try:
+        import matplotlib.pyplot as plt
+
+        names = df.get("model", df.get("results_dir", df.index.astype(str))).astype(str).tolist()
+        x = np.arange(len(names))
+        width = 0.38
+
+        tr_time = df["train_duration_s"].fillna(0.0).to_numpy(dtype=float)
+        te_time = df["test_duration_s"].fillna(0.0).to_numpy(dtype=float)
+        tr_em = df.get("train_emissions_kg", pd.Series([np.nan]*len(df))).fillna(0.0).to_numpy(dtype=float)
+        te_em = df.get("test_emissions_kg", pd.Series([np.nan]*len(df))).fillna(0.0).to_numpy(dtype=float)
+
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(max(6, len(names) * 0.8), 6), sharex=True)
+        # Time subplot
+        ax1.bar(x - width/2, tr_time, width, label="Train/Validation time", color="#1f77b4")
+        ax1.bar(x + width/2, te_time, width, label="Test time", color="#ff7f0e")
+        ax1.set_ylabel("seconds")
+        ax1.set_title("Runtimes by model")
+        ax1.legend()
+
+        # Emissions subplot
+        ax2.bar(x - width/2, tr_em, width, label="Train/Validation emissions", color="#2ca02c")
+        ax2.bar(x + width/2, te_em, width, label="Test emissions", color="#d62728")
+        ax2.set_ylabel("kg CO2e")
+        ax2.set_title("Emissions by model")
+        ax2.set_xticks(x, names, rotation=35, ha="right")
+        ax2.legend()
+
+        fig.tight_layout()
+        fig.savefig(out_path, dpi=150)
+        plt.close(fig)
+    except Exception:
+        pass
+
+
 def main() -> None:
     ensure_dir(OUT_DIR)
     df = _load_metrics()
@@ -124,6 +193,43 @@ def main() -> None:
     _plot_pareto(df2, cost_col="test_duration_s", out_path=OUT_DIR / "pareto_test_time.png", title="Pareto front (min time, max F1)")
     if df2["test_emissions_kg"].notna().any():
         _plot_pareto(df2, cost_col="test_emissions_kg", out_path=OUT_DIR / "pareto_test_emissions.png", title="Pareto front (min emissions, max F1)")
+
+    # Grouped bars for emissions (train/test) and durations (train/test)
+    name_col = df2.get("model", df2.get("results_dir"))
+    df_plot = df2.copy()
+    if name_col is None:
+        df_plot["model"] = [f"model_{i}" for i in range(len(df_plot))]
+    # Keep columns and order stable
+    cols_keep = [c for c in ["model", "results_dir", "train_emissions_kg", "test_emissions_kg", "train_duration_s", "test_duration_s"] if c in df_plot.columns]
+    df_plot = df_plot[cols_keep]
+
+    # Sort by model name for stable x-axis
+    sort_key = "model" if "model" in df_plot.columns else "results_dir"
+    df_plot = df_plot.sort_values(sort_key)
+
+    # Emissions bars
+    if "train_emissions_kg" in df_plot.columns and "test_emissions_kg" in df_plot.columns:
+        _plot_grouped_bars(
+            df_plot,
+            columns=["train_emissions_kg", "test_emissions_kg"],
+            labels=["Train/Validation emissions", "Test emissions"],
+            title="Emissions by model",
+            y_label="kg CO2e",
+            out_path=OUT_DIR / "bars_emissions.png",
+        )
+
+    # Duration bars
+    _plot_grouped_bars(
+        df_plot,
+        columns=["train_duration_s", "test_duration_s"],
+        labels=["Train/Validation time", "Test time"],
+        title="Runtimes by model",
+        y_label="seconds",
+        out_path=OUT_DIR / "bars_time.png",
+    )
+
+    # Combined 2x1 figure
+    _plot_combined_time_emissions(df_plot, OUT_DIR / "bars_time_emissions.png")
 
     print(f"Saved efficiency plots to {OUT_DIR}")
 
