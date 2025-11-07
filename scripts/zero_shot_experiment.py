@@ -16,10 +16,10 @@ RESULTS_DIR = Path("results/zero_shot")
 MODEL_NAME = "typeform/distilbert-base-uncased-mnli"
 BATCH_SIZE = 16
 
+# Binary labels to match the dataset: 0 = not hateful, 1 = hateful
 LABEL_MAP = {
-    0: "hate speech",
-    1: "offensive language",
-    2: "neither offensive nor hateful",
+    0: "not hateful",
+    1: "hateful",
 }
 
 
@@ -80,9 +80,11 @@ def main() -> None:
     classifier = load_pipeline()
 
     candidate_labels = list(LABEL_MAP.values())
+    # Keep hypothesis templates compatible with the exact candidate labels
+    # so the filled sentence reads naturally for both "hateful" and "not hateful".
     templates = [
         "This tweet is {}.",
-        "The author of this tweet is using {}.",
+        "This tweet contains {} content.",
     ]
 
     def evaluate_templates():
