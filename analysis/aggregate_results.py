@@ -46,10 +46,22 @@ def _add_efficiency(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def _drop_unwanted_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Drop only known unwanted columns (e.g., 'selected_template') and
+    preserve every other column as-is to avoid surprising downstream changes.
+    """
+    df = df.copy()
+    for col in ["selected_template"]:
+        if col in df.columns:
+            df = df.drop(columns=[col])
+    return df
+
+
 def main() -> None:
     ensure_dir(OUT_DIR)
     df = _load_all_test_metrics()
     df = _add_efficiency(df)
+    df = _drop_unwanted_columns(df)
     # Sort helpful view by test F1 desc then test time asc
     df_sorted = df.sort_values(["f1_macro", "test_duration_s"], ascending=[False, True])
     save_csv(df_sorted, OUT_DIR / "summary.csv")
@@ -58,4 +70,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
