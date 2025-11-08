@@ -26,6 +26,17 @@
   \ifstrequal{#1}{zero_shot}{Zero-shot}{\texttt{\detokenize{#1}}}%
   }}}}}
 
+% Map numeric labels to readable names for tables (robust to stray spaces)
+\newcommand{\labname}[1]{%
+  \begingroup
+    \edef\labtmp{#1}% ensure full expansion
+    \ifnum\numexpr\labtmp\relax=0 Not hateful% 0 -> not hateful
+    \else\ifnum\numexpr\labtmp\relax=1 Hateful% 1 -> hateful
+    \else #1% fallback: print as-is for unknown labels
+    \fi\fi
+  \endgroup
+}
+
 % --- Title/Author ---
 \begin{document}
 \title{Hate Speech Classification: Effectiveness-Efficiency Trade-offs on Twitter}
@@ -56,7 +67,7 @@ We use the Twitter hate speech dataset (training split) as provided on Kaggle \c
     late after line=\\,
     table foot=\bottomrule
 ]{../results/analysis/per_class_summary.csv}{}{
-    \csvcoli & \csvcolii & \num{\csvcoliii} & \num{\csvcolxvii} & \num{\csvcolxviii}
+    \labname{\csvcoli} & \csvcolii & \num{\csvcoliii} & \num{\csvcolxvii} & \num{\csvcolxviii}
 }
 \end{table}
 
@@ -93,7 +104,7 @@ Table~\ref{tab:summary} reports test macro-F1 and accuracy alongside estimated t
 }
 \end{table*}
 
-Figure~\ref{fig:pareto} shows the Pareto frontier of macro-F1 vs test emissions. We prefer emissions-based comparisons over time-based ones, given emissions encode both runtime and CPU utilization under our CPU-only protocol.
+Figure~\ref{fig:pareto} shows the Pareto frontier of macro-F1 vs test emissions.
 
 \begin{figure}[!b]
     \centering
@@ -103,7 +114,7 @@ Figure~\ref{fig:pareto} shows the Pareto frontier of macro-F1 vs test emissions.
 \end{figure}
 
 \subsection{Statistical Significance}
-We apply McNemar's test to paired predictions. Table~\ref{tab:mcnemar} lists pairwise results; SVM+TF-IDF significantly outperforms the neural baselines at $\alpha=0.05$ on this test set.
+We apply McNemar's test to paired predictions. Table~\ref{tab:mcnemar} lists pairwise results. The only comparison that is not significant at $\alpha=0.05$ is between LSTM and MiniLM+LR ($p\approx0.627$), meaning we cannot conclude a true difference in performance despite the small macro-F1 gap. All other reported pairwise differences are significant; in particular, SVM+TF-IDF significantly outperforms all the alternatives.
 
 \begin{table}[!t]
 \caption{McNemar pairwise tests (p-value and significance).}
@@ -121,7 +132,7 @@ We apply McNemar's test to paired predictions. Table~\ref{tab:mcnemar} lists pai
 \end{table}
 
 \subsection{Error Analysis}
-We inspect confusion matrices and misclassified examples. Due to space, we include the SVM+TF-IDF confusion matrix in Figure~\ref{fig:cm-svm}; other model-specific reports are similar and are available in the artifacts.
+Beyond the metrics reported here, each classifier's confusion matrix and the list of misclassified examples are available in the repository. For illustration, we show the confusion matrix of the best-performing classifier (SVM+TF-IDF) in Figure~\ref{fig:cm-svm}.
 
 \begin{figure}[!t]
     \centering
