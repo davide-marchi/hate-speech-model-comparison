@@ -15,7 +15,7 @@
 \def\UrlBreaks{\do\/\do-}
 
 % siunitx rounding setup for tables
-\sisetup{round-mode=places,round-precision=2,detect-all=true,output-exponent-marker=\mathrm{e}}
+\sisetup{round-mode=places,round-precision=3,detect-all=true,output-exponent-marker=\mathrm{e}}
 
 % Map CSV model identifiers to printable names (avoid underscores)
 \newcommand{\modelname}[1]{%
@@ -34,42 +34,29 @@
 
 % --- Abstract ---
 \begin{abstract}
-We compare five text classifiers for hate speech detection on Twitter: a regex/keyword baseline, linear SVM with TF--IDF features, MiniLM sentence embeddings with logistic regression, an LSTM sequence model, and a zero-shot classifier based on DistilBERT fine-tuned on MNLI. Effectiveness is measured by macro-F1 and accuracy; efficiency is measured by estimated carbon emissions (kg~CO$_2$e) for training and testing, alongside time. All experiments run on CPU only to ensure comparability, and emissions reflect both runtime and hardware utilization. On the test set, the SVM+TF--IDF model attains the best macro-F1 while remaining among the most emission-efficient models. Pairwise McNemar tests indicate the SVM significantly outperforms the other supervised alternatives. A Pareto analysis of macro-F1 vs test emissions highlights practical trade-offs between effectiveness and environmental cost.
+We compare five text classifiers for hate speech detection on Twitter: a regex/keyword baseline, linear SVM with TF--IDF features, MiniLM sentence embeddings with logistic regression, an LSTM sequence model, and a zero-shot classifier based on DistilBERT fine-tuned on MNLI. Effectiveness is measured by macro-F1 and accuracy; efficiency is measured by estimated carbon emissions (kg~CO$_2$e) for training and testing, alongside time. Pairwise McNemar tests assess statistical significance. A Pareto analysis of macro-F1 vs test emissions highlights practical trade-offs between effectiveness and environmental cost.
 \end{abstract}
 
 \section{Introduction}
-Hate speech detection is commonly framed as a text classification task. In practical settings, model choice should consider not only effectiveness (e.g., macro-F1) but also efficiency and environmental impact. We study this trade-off across five representative approaches, from simple keyword rules to modern pretrained models. The complete code and artifacts are available at: \href{https://github.com/davide-marchi/hate-speech-model-comparison}{github.com/davide-marchi/hate-speech-model-comparison}.
+We study the effectiveness--efficiency trade-off in hate speech classification with five representative models, from keyword rules to pretrained transformers. We report macro-F1 and accuracy alongside estimated emissions, and test for significance with McNemar's test. Code and artifacts: \href{https://github.com/davide-marchi/hate-speech-model-comparison}{github.com/davide-marchi/hate-speech-model-comparison}.
 
 \section{Data}
-We use the Twitter hate speech dataset (training split) as provided on Kaggle \cite{kaggle_twitter_hate_speech}. Table~\ref{tab:data} summarizes corpus-level statistics; class distribution is in Table~\ref{tab:dist}. We apply standard text cleaning (URLs, mentions, lowercasing) consistent with reproducible baselines.
+We use the Twitter hate speech dataset (training split) as provided on Kaggle \cite{kaggle_twitter_hate_speech}. Table~\ref{tab:dist} shows class distribution with token length statistics. We apply standard text cleaning (URLs, mentions, lowercasing).
+
+% (Dataset overview table removed as requested.)
 
 \begin{table}[!t]
-\caption{Dataset overview (from processed training data).}
-\label{tab:data}
-\centering
-\small
-\csvreader[
-    tabular=lccc,
-    table head=\toprule n\_records & n\_classes & avg\_tokens & median\_tokens\\\midrule,
-    late after line=\\,
-    table foot=\bottomrule
-]{../results/analysis/dataset_summary.csv}{}{
-    \csvcoli & \csvcolii & \num{\csvcoliii} & \num{\csvcoliv}
-}
-\end{table}
-
-\begin{table}[!t]
-\caption{Label distribution in the training data.}
+\caption{Label distribution and token length in the training data.}
 \label{tab:dist}
 \centering
 \small
 \csvreader[
-    tabular=rrr,
-    table head=\toprule label & count & percent \\ \midrule,
+    tabular=rrrrr,
+    table head=\toprule label & count & percent & tokens mean & tokens std \\ \midrule,
     late after line=\\,
     table foot=\bottomrule
 ]{../results/analysis/per_class_summary.csv}{}{
-    \csvcoli & \csvcolii & \num{\csvcoliii}
+    \csvcoli & \csvcolii & \num{\csvcoliii} & \num{\csvcolxvii} & \num{\csvcolxviii}
 }
 \end{table}
 
@@ -82,12 +69,10 @@ We compare the following models:
     \item \textbf{LSTM}: a recurrent model over token sequences \cite{hochreiter1997long}.
     \item \textbf{Zero-shot (DistilBERT-MNLI)}: using the pretrained model \texttt{distilbert-base-uncased-mnli} \cite{sanh2019distilbert} with an NLI-based zero-shot pipeline \cite{wolf2020transformers}.
 \end{itemize}
-Hyperparameters are selected by cross-validation where applicable, and we report the best validation score together with test metrics (see Table~\ref{tab:summary}).
+We perform grid search over model-specific hyperparameters; performance is reported on the test set (see Table~\ref{tab:summary}).
 
 \section{Experimental Setup}
-All runs are performed on CPU only for consistency across models and to ensure comparable emissions estimates. We track both \emph{time} and \emph{carbon emissions (kg~CO$_2$e)} during training and testing. Emissions reflect runtime and estimated power draw, which depends on CPU utilization; therefore, we emphasize emissions as an efficiency metric rather than wall-clock time alone \cite{strubell2019energy,lacoste2019quantifying}.
-
-Effectiveness metrics include macro-F1 (primary) and accuracy. For statistical comparisons, we use McNemar's test on paired predictions.
+All runs are performed on CPU only for consistency across models. We track both \emph{time} and \emph{carbon emissions (kg~CO$_2$e)} during training and testing. Emissions are estimated via a tracker implemented with the CodeCarbon library \cite{codecarbon}, which accounts for runtime and power draw; therefore, we emphasize emissions as an efficiency metric rather than wall-clock time alone \cite{strubell2019energy,lacoste2019quantifying}.
 
 \section{Results}
 \subsection{Effectiveness and Emissions}
@@ -99,12 +84,12 @@ Table~\ref{tab:summary} reports test macro-F1 and accuracy alongside estimated t
 \centering
 \small
 \csvreader[
-    tabular=lcccc,
-    table head=\toprule model & macro-F1 & accuracy & test~emissions~(kg) & train~emissions~(kg) \\\midrule,
+    tabular=lcccccc,
+    table head=\toprule model & macro-F1 & accuracy & test~time~(s) & train~time~(s) & test~emissions~(kg) & train~emissions~(kg) \\\midrule,
     late after line=\\,
     table foot=\bottomrule
 ]{../results/analysis/summary.csv}{}{
-    \expandafter\modelname\expandafter{\csvcoli} & \num{\csvcolx} & \num{\csvcolvii} & \num{\csvcolvi} & \num{\csvcoliv}
+    \expandafter\modelname\expandafter{\csvcoli} & \num{\csvcolx} & \num{\csvcolvii} & \num{\csvcolv} & \num{\csvcoliii} & \num[round-precision=6]{\csvcolvi} & \num[round-precision=6]{\csvcoliv}
 }
 \end{table*}
 
@@ -186,6 +171,9 @@ E. Strubell, A. Ganesh, and A. McCallum, ``Energy and Policy Considerations for 
 
 \bibitem{lacoste2019quantifying}
 A. Lacoste, A. Sasha Luccioni, V. Schmidt, and T. Dandres, ``Quantifying the Carbon Emissions of Machine Learning,'' arXiv:1910.09700, 2019.
+
+\bibitem{codecarbon}
+CodeCarbon, ``CodeCarbon: Track Carbon Emissions from Machine Learning,'' available at: \url{https://github.com/mlco2/codecarbon} (accessed Nov. 2025).
 
 \bibitem{kaggle_twitter_hate_speech}
 ``Twitter Hate Speech,'' Kaggle, available at: \url{https://www.kaggle.com/vkrahul/twitter-hate-speech} (accessed Nov. 2025).
