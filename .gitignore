@@ -8,3 +8,7 @@ report.log
 report.out
 report.synctex.gz
 report.toc
+
+# Data: ignore all contents of dataset except its .gitkeep
+dataset/*
+!dataset/.gitkeep
