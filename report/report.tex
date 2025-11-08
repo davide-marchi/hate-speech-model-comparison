@@ -87,7 +87,7 @@ All runs are performed on CPU only for consistency across models. We track both 
 
 \section{Results}
 \subsection{Effectiveness and Emissions}
-Table~\ref{tab:summary} reports test macro-F1 and accuracy alongside estimated test and train emissions. The SVM+TF-IDF model achieves the highest macro-F1 while keeping emissions low relative to neural alternatives. The keyword baseline is extremely efficient but lags in macro-F1. The zero-shot DistilBERT provides modest macro-F1 and comparatively higher emissions.
+Table~\ref{tab:summary} reports test macro-F1, accuracy, test/train time and emissions, plus an efficiency metric (F1 per kg CO$_2$e) for testing. The SVM+TF-IDF model achieves the highest macro-F1 while keeping emissions low relative to neural alternatives. The keyword baseline is the least energy consuming but lags in macro-F1. The zero-shot DistilBERT provides modest macro-F1 and comparatively higher emissions.
 
 \begin{table*}[!t]
 \caption{Effectiveness and emissions summary.}
@@ -95,12 +95,12 @@ Table~\ref{tab:summary} reports test macro-F1 and accuracy alongside estimated t
 \centering
 \footnotesize
 \csvreader[
-    tabular=lcccccc,
-    table head=\toprule model & macro-F1 & accuracy & test~time~(s) & train~time~(s) & test~emissions~(kg) & train~emissions~(kg) \\\midrule,
+    tabular=lccccccc,
+    table head=\toprule model & macro-F1 & accuracy & test~time~(s) & train~time~(s) & test~emissions~(kg) & train~emissions~(kg) & efficiency~(F1/kg) \\\midrule,
     late after line=\\,
     table foot=\bottomrule
 ]{../results/analysis/summary.csv}{}{
-    \expandafter\modelname\expandafter{\csvcoli} & \num{\csvcolx} & \num{\csvcolvii} & \num{\csvcolv} & \num{\csvcoliii} & \num[round-precision=6]{\csvcolvi} & \num[round-precision=6]{\csvcoliv}
+    \expandafter\modelname\expandafter{\csvcoli} & \num{\csvcolx} & \num{\csvcolvii} & \num{\csvcolv} & \num{\csvcoliii} & \num[round-precision=6]{\csvcolvi} & \num[round-precision=6]{\csvcoliv} & \num{\csvcolxiv}
 }
 \end{table*}
 
