@@ -60,7 +60,7 @@ We use the Twitter hate speech dataset (training split) as provided on Kaggle \c
 \caption{Label distribution and token length in the training data.}
 \label{tab:dist}
 \centering
-\small
+\footnotesize
 \csvreader[
     tabular=rrrrr,
     table head=\toprule label & count & percent & tokens mean & tokens std \\ \midrule,
@@ -93,7 +93,7 @@ Table~\ref{tab:summary} reports test macro-F1 and accuracy alongside estimated t
 \caption{Effectiveness and emissions summary.}
 \label{tab:summary}
 \centering
-\small
+\footnotesize
 \csvreader[
     tabular=lcccccc,
     table head=\toprule model & macro-F1 & accuracy & test~time~(s) & train~time~(s) & test~emissions~(kg) & train~emissions~(kg) \\\midrule,
@@ -108,7 +108,7 @@ Figure~\ref{fig:pareto} shows the Pareto frontier of macro-F1 vs test emissions.
 
 \begin{figure}[!b]
     \centering
-    \includegraphics[width=\linewidth]{../results/analysis/pareto_test_emissions.png}
+    \includegraphics[width=0.9\linewidth]{../results/analysis/pareto_test_emissions.png}
     \caption{Macro-F1 vs test emissions with a Pareto frontier.}
     \label{fig:pareto}
 \end{figure}
@@ -120,7 +120,7 @@ We apply McNemar's test to paired predictions. Table~\ref{tab:mcnemar} lists pai
 \caption{McNemar pairwise tests (p-value and significance).}
 \label{tab:mcnemar}
 \centering
-\small
+\footnotesize
 \csvreader[
     tabular=llcc,
     table head=\toprule model\_a & model\_b & p\_value & significant \\\midrule,
@@ -142,15 +142,15 @@ Beyond the metrics reported here, each classifier's confusion matrix and the lis
 \end{figure}
 
 \section{Discussion}
-Our results suggest that strong linear baselines remain competitive on short social media text: SVM+TF-IDF provides the best macro-F1 at a favorable emissions footprint. Pretrained embeddings (MiniLM) and LSTM narrow the effectiveness gap but incur higher emissions per test example. Zero-shot classification offers convenience and label flexibility without task-specific training, but its emissions are comparatively higher under CPU-only inference. The keyword baseline is the most efficient but sacrifices recall.
+Our results suggest that strong linear baselines remain competitive on short social media text: SVM+TF-IDF provides the best macro-F1 at a favorable emissions footprint. Pretrained embeddings (MiniLM) and LSTM narrow the effectiveness gap but incur higher emissions per test example. Zero-shot classification offers convenience and label flexibility without task-specific training, but its emissions are comparatively higher. The keyword baseline is the least energy consuming.
 
-Generalization to other hate speech datasets is plausible for relative rankings between simple linear baselines and larger neural models, though dataset shift (lexical, topical, and label schema) can alter absolute metrics. The emissions trends should persist under CPU-only execution; on GPUs, relative emissions may change depending on batch size and utilization.
+Generalization to other hate speech datasets without retraining is plausible, but sensitivity to context matters. When syntax and lexicon shift substantially, syntax-based approaches such as regex and SVM+TF-IDF are likely to degrade most, while semantic approaches like sentence embeddings and LSTM (which leverages pretrained word embeddings) should be more robust.
 
 \section{Limitations}
-Class imbalance and domain-specific language may bias metrics. Emissions are estimates (e.g., based on hardware utilization and regional energy intensity) and should be interpreted as relative comparisons rather than exact measurements. We restrict to small models and CPU to keep runs comparable; larger models or GPUs may change the Pareto frontier.
+Neural models such as LSTM, zero-shot transformers, and sentence-embedding pipelines can scale far beyond what we ran here: many hyperparameters, larger architectures, and heavier training that often improve accuracy but raise emissions. Due to hardware limits, we explored small configurations, whereas the SVM+TF-IDF baseline is near its optimal regime on this dataset. With more compute and a larger corpus, SVM+TF-IDF might improve slightly, but the other approaches could surpass it, at a higher carbon footprint.
 
 \section{Conclusion}
-On this dataset, SVM+TF-IDF is a strong effectiveness-efficiency choice, dominating neural alternatives under CPU-only constraints. Emissions-aware evaluation provides a more informative perspective than time alone because it incorporates utilization. Code and full artifacts are available at \href{https://github.com/davide-marchi/hate-speech-model-comparison}{github.com/davide-marchi/hate-speech-model-comparison}.
+On this dataset, SVM+TF-IDF is a strong effectiveness-efficiency choice, while with sufficient time and compute fully fine-tuned semantic models (e.g., BERT) would likely outperform it and generalize better across datasets.
 
 \begin{thebibliography}{00}
 \bibitem{kaggle_twitter_hate_speech}
