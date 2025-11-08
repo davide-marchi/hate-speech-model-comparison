@@ -10,6 +10,26 @@ from sklearn.metrics import classification_report, confusion_matrix
 from src.utils.io_utils import ensure_dir, save_csv
 
 
+def _mpl_setup() -> None:
+    try:
+        import matplotlib as mpl
+        mpl.rcParams.update(
+            {
+                "font.family": "serif",
+                "font.serif": [
+                    "Times New Roman",
+                    "Times",
+                    "CMU Serif",
+                    "DejaVu Serif",
+                ],
+                "mathtext.fontset": "cm",
+                "font.size": 10,
+            }
+        )
+    except Exception:
+        pass
+
+
 RESULTS_ROOT = Path("results")
 
 
@@ -40,20 +60,29 @@ def analyze_model(results_dir: Path, label_names: List[str] | None = None) -> No
     # Plot confusion matrix heatmap (optional)
     try:
         import matplotlib.pyplot as plt
+        _mpl_setup()
 
         fig, ax = plt.subplots(figsize=(4, 4))
         im = ax.imshow(cm, cmap="Blues")
         ax.set_title("Confusion Matrix")
         ax.set_xlabel("Predicted")
         ax.set_ylabel("True")
-        ax.set_xticks(range(len(labels)), labels)
-        ax.set_yticks(range(len(labels)), labels)
+        # Use readable class names when provided, in the order of 'labels'
+        if label_names is not None and len(label_names) == len(labels):
+            name_map = {int(i): str(n) for i, n in enumerate(label_names)}
+            x_ticklabels = [name_map.get(int(l), str(l)) for l in labels]
+            y_ticklabels = x_ticklabels
+        else:
+            x_ticklabels = [str(l) for l in labels]
+            y_ticklabels = x_ticklabels
+        ax.set_xticks(range(len(labels)), x_ticklabels)
+        ax.set_yticks(range(len(labels)), y_ticklabels)
         for i in range(len(labels)):
             for j in range(len(labels)):
                 ax.text(j, i, int(cm[i, j]), ha="center", va="center", color="black")
         fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
         fig.tight_layout()
-        fig.savefig(out_dir / "confusion_matrix.png", dpi=150)
+        fig.savefig(out_dir / "confusion_matrix.png", dpi=300, bbox_inches="tight", pad_inches=0.02)
         plt.close(fig)
     except Exception:
         pass
@@ -64,7 +93,7 @@ def analyze_model(results_dir: Path, label_names: List[str] | None = None) -> No
 
 
 def main() -> None:
-    label_names = ["not hateful", "hateful"]
+    label_names = ["Not hateful", "Hateful"]
     for sub in sorted(RESULTS_ROOT.iterdir()):
         if sub.is_dir() and sub.name != "analysis":
             analyze_model(sub, label_names)
@@ -73,4 +102,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

@@ -9,6 +9,39 @@ import pandas as pd
 from src.utils.io_utils import ensure_dir, save_csv
 
 
+def _mpl_setup() -> None:
+    try:
+        import matplotlib as mpl
+        mpl.rcParams.update(
+            {
+                "font.family": "serif",
+                "font.serif": [
+                    "Times New Roman",
+                    "Times",
+                    "CMU Serif",
+                    "DejaVu Serif",
+                ],
+                "mathtext.fontset": "cm",
+                "font.size": 10,
+            }
+        )
+    except Exception:
+        pass
+
+
+def _pretty_name(name: str | None) -> str:
+    if not name:
+        return ""
+    mapping = {
+        "svm_tfidf": "SVM+TF-IDF",
+        "minilm_logreg": "MiniLM+LR",
+        "lstm_skorch": "LSTM",
+        "regex_keyword": "Regex/Keyword",
+        "zero_shot": "Zero-shot",
+    }
+    return mapping.get(str(name), str(name))
+
+
 RESULTS_ROOT = Path("results")
 OUT_DIR = RESULTS_ROOT / "analysis"
 
@@ -50,20 +83,28 @@ def _pareto_front(f1: np.ndarray, cost: np.ndarray) -> np.ndarray:
 def _plot_scatter(df: pd.DataFrame, x: str, y: str, title: str, out_path: Path, logx: bool = False) -> None:
     try:
         import matplotlib.pyplot as plt
+        _mpl_setup()
 
         fig, ax = plt.subplots(figsize=(6, 4))
         xs = df[x].to_numpy()
         ys = df[y].to_numpy()
         ax.scatter(xs, ys, c="#1f77b4")
         for _, row in df.iterrows():
-            ax.annotate(row.get("model", row.get("results_dir", "")), (row[x], row[y]), textcoords="offset points", xytext=(3, 3), fontsize=8)
-        ax.set_xlabel(x.replace("_", " "))
-        ax.set_ylabel(y.replace("_", " "))
+            label = _pretty_name(row.get("model", row.get("results_dir", "")))
+            ax.annotate(label, (row[x], row[y]), textcoords="offset points", xytext=(3, 3), fontsize=8)
+        # Refined axis labels
+        if x == "test_emissions_kg":
+            ax.set_xlabel("Test emissions (kg CO2e, log scale)")
+        elif x == "test_duration_s":
+            ax.set_xlabel("Test time (s, log scale)")
+        else:
+            ax.set_xlabel(x.replace("_", " "))
+        ax.set_ylabel("Macro-F1" if y == "f1_macro" else y.replace("_", " "))
         ax.set_title(title)
         if logx:
             ax.set_xscale("log")
         fig.tight_layout()
-        fig.savefig(out_path, dpi=150)
+        fig.savefig(out_path, dpi=300)
         plt.close(fig)
     except Exception:
         pass
@@ -72,8 +113,10 @@ def _plot_scatter(df: pd.DataFrame, x: str, y: str, title: str, out_path: Path, 
 def _plot_pareto(df: pd.DataFrame, cost_col: str, out_path: Path, title: str) -> None:
     try:
         import matplotlib.pyplot as plt
+        _mpl_setup()
 
-        valid = df[["f1_macro", cost_col]].dropna()
+        cols = ["f1_macro", cost_col] + [c for c in ("model", "results_dir") if c in df.columns]
+        valid = df[cols].dropna(subset=["f1_macro", cost_col])
         if valid.empty:
             return
         f1 = valid["f1_macro"].to_numpy()
@@ -81,19 +124,24 @@ def _plot_pareto(df: pd.DataFrame, cost_col: str, out_path: Path, title: str) ->
         mask = _pareto_front(f1, cost)
 
         fig, ax = plt.subplots(figsize=(6, 4))
-        ax.scatter(cost, f1, c="#7f7f7f", label="Models")
+        # Use blue markers for consistency with confusion matrix colormap
+        ax.scatter(cost, f1, c="#1f77b4", label="Models")
         front = valid[mask].sort_values(cost_col)
         ax.plot(front[cost_col], front["f1_macro"], "-o", color="#d62728", label="Pareto front")
         for _, row in valid.iterrows():
-            ax.annotate(row.get("model", row.name), (row[cost_col], row["f1_macro"]), textcoords="offset points", xytext=(3, 3), fontsize=8)
-        ax.set_xlabel(cost_col.replace("_", " "))
-        ax.set_ylabel("f1_macro")
-        ax.set_title(title)
+            label = _pretty_name(row.get("model", row.get("results_dir", "")))
+            ax.annotate(label, (row[cost_col], row["f1_macro"]), textcoords="offset points", xytext=(3, 3), fontsize=8)
+        # Refined labels
         if "emissions" in cost_col:
             ax.set_xscale("log")
+            ax.set_xlabel("Test emissions (kg CO2e, log scale)")
+        else:
+            ax.set_xlabel("Test time (s, log scale)")
+        ax.set_ylabel("Macro-F1")
+        ax.set_title("Pareto front (min emissions, max F1)" if "emissions" in cost_col else "Pareto front (min time, max F1)")
         ax.legend(loc="best")
         fig.tight_layout()
-        fig.savefig(out_path, dpi=150)
+        fig.savefig(out_path, dpi=300, bbox_inches="tight", pad_inches=0.02)
         plt.close(fig)
     except Exception:
         pass
@@ -119,7 +167,7 @@ def _plot_grouped_bars(df: pd.DataFrame, columns: list[str], labels: list[str], 
         ax.set_xticks(x, names, rotation=35, ha="right")
         ax.legend()
         fig.tight_layout()
-        fig.savefig(out_path, dpi=150)
+        fig.savefig(out_path, dpi=300, bbox_inches="tight", pad_inches=0.02)
         plt.close(fig)
     except Exception:
         pass
@@ -156,7 +204,7 @@ def _plot_combined_time_emissions(df: pd.DataFrame, out_path: Path) -> None:
         ax2.legend()
 
         fig.tight_layout()
-        fig.savefig(out_path, dpi=150)
+        fig.savefig(out_path, dpi=300, bbox_inches="tight", pad_inches=0.02)
         plt.close(fig)
     except Exception:
         pass
