@@ -64,15 +64,15 @@ We use the Twitter hate speech dataset (training split) as provided on Kaggle \c
 We compare the following models:
 \begin{itemize}
     \item \textbf{Regex/keyword}: a lexical baseline built from indicative keywords and patterns; see early rule-based toxic language detection \cite{spertus1997smokey}.
-    \item \textbf{SVM + TF--IDF}: a linear SVM on word/character TF--IDF features, a strong classical baseline for text classification \cite{joachims1998text,salton1988term}.
-    \item \textbf{MiniLM + Logistic Regression}: sentence embeddings from Sentence-Transformers \texttt{all-MiniLM-L6-v2} \cite{reimers2019sentence,wang2020minilm} followed by logistic regression.
+    \item \textbf{SVM + TF--IDF}: a linear SVM on word/character TF--IDF features, a strong classical baseline for text classification \cite{joachims1998text}.
+    \item \textbf{MiniLM + Logistic Regression}: sentence embeddings from \texttt{all-MiniLM-L6-v2} \cite{wang2020minilm} followed by logistic regression.
     \item \textbf{LSTM}: a recurrent model over token sequences \cite{hochreiter1997long}.
-    \item \textbf{Zero-shot (DistilBERT-MNLI)}: using the pretrained model \texttt{distilbert-base-uncased-mnli} \cite{sanh2019distilbert} with an NLI-based zero-shot pipeline \cite{wolf2020transformers}.
+    \item \textbf{Zero-shot (DistilBERT-MNLI)}: using the pretrained model \texttt{distilbert-base-uncased-mnli} \cite{sanh2019distilbert} for zero-shot classification via NLI.
 \end{itemize}
 We perform grid search over model-specific hyperparameters; performance is reported on the test set (see Table~\ref{tab:summary}).
 
 \section{Experimental Setup}
-All runs are performed on CPU only for consistency across models. We track both \emph{time} and \emph{carbon emissions (kg~CO$_2$e)} during training and testing. Emissions are estimated via a tracker implemented with the CodeCarbon library \cite{codecarbon}, which accounts for runtime and power draw; therefore, we emphasize emissions as an efficiency metric rather than wall-clock time alone \cite{strubell2019energy,lacoste2019quantifying}.
+All runs are performed on CPU only for consistency across models. We track both \emph{time} and \emph{carbon emissions (kg~CO$_2$e)} during training and testing. Emissions are estimated via a tracker implemented with the CodeCarbon library \cite{codecarbon}, which accounts for runtime and power draw; therefore, we emphasize emissions as an efficiency metric rather than wall-clock time alone \cite{lacoste2019quantifying}.
 
 \section{Results}
 \subsection{Effectiveness and Emissions}
@@ -125,7 +125,7 @@ We inspect confusion matrices and misclassified examples. Due to space, we inclu
 
 \begin{figure}[!t]
     \centering
-    \includegraphics[width=\linewidth]{../results/svm_tfidf/analysis/confusion_matrix.png}
+    \includegraphics[width=.5\linewidth]{../results/svm_tfidf/analysis/confusion_matrix.png}
     \caption{Confusion matrix for SVM+TF--IDF on the test set.}
     \label{fig:cm-svm}
 \end{figure}
@@ -148,12 +148,6 @@ E. Spertus, ``Smokey: Automatic Recognition of Hostile Messages,'' in IAAI, 1997
 \bibitem{joachims1998text}
 T. Joachims, ``Text Categorization with Support Vector Machines: Learning with Many Relevant Features,'' in ECML, 1998.
 
-\bibitem{salton1988term}
-G. Salton and C. Buckley, ``Term-weighting approaches in automatic text retrieval,'' Information Processing \& Management, 24(5):513--523, 1988.
-
-\bibitem{reimers2019sentence}
-N. Reimers and I. Gurevych, ``Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks,'' in EMNLP, 2019.
-
 \bibitem{wang2020minilm}
 W. Wang, F. Wei, L. Dong, H. Bao, N. Yang, and M. Zhou, ``MiniLM: Deep Self-Attention Distillation for Task-Agnostic Compression of Pre-Trained Transformers,'' arXiv:2002.10957, 2020.
 
@@ -162,12 +156,6 @@ S. Hochreiter and J. Schmidhuber, ``Long short-term memory,'' Neural Computation
 
 \bibitem{sanh2019distilbert}
 V. Sanh, L. Debut, J. Chaumond, and T. Wolf, ``DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter,'' arXiv:1910.01108, 2019.
-
-\bibitem{wolf2020transformers}
-T. Wolf et al., ``Transformers: State-of-the-Art Natural Language Processing,'' in EMNLP: System Demonstrations, 2020.
-
-\bibitem{strubell2019energy}
-E. Strubell, A. Ganesh, and A. McCallum, ``Energy and Policy Considerations for Deep Learning in NLP,'' in ACL, 2019.
 
 \bibitem{lacoste2019quantifying}
 A. Lacoste, A. Sasha Luccioni, V. Schmidt, and T. Dandres, ``Quantifying the Carbon Emissions of Machine Learning,'' arXiv:1910.09700, 2019.
