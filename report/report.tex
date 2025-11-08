@@ -14,6 +14,9 @@
 % For compact URLs in footnotes
 \def\UrlBreaks{\do\/\do-}
 
+% siunitx rounding setup for tables
+\sisetup{round-mode=places,round-precision=2,detect-all=true,output-exponent-marker=\mathrm{e}}
+
 % Map CSV model identifiers to printable names (avoid underscores)
 \newcommand{\modelname}[1]{%
   \ifstrequal{#1}{svm_tfidf}{SVM+TF--IDF}{%
@@ -44,13 +47,14 @@ We use the Twitter hate speech dataset (training split) as provided on Kaggle \c
 \caption{Dataset overview (from processed training data).}
 \label{tab:data}
 \centering
+\small
 \csvreader[
     tabular=lccc,
     table head=\toprule n\_records & n\_classes & avg\_tokens & median\_tokens\\\midrule,
     late after line=\\,
     table foot=\bottomrule
 ]{../results/analysis/dataset_summary.csv}{}{
-    \csvcoli & \csvcolii & \csvcoliii & \csvcoliv
+    \csvcoli & \csvcolii & \num{\csvcoliii} & \num{\csvcoliv}
 }
 \end{table}
 
@@ -58,13 +62,14 @@ We use the Twitter hate speech dataset (training split) as provided on Kaggle \c
 \caption{Label distribution in the training data.}
 \label{tab:dist}
 \centering
+\small
 \csvreader[
     tabular=rrr,
     table head=\toprule label & count & percent \\ \midrule,
     late after line=\\,
     table foot=\bottomrule
 ]{../results/analysis/per_class_summary.csv}{}{
-    \csvcoli & \csvcolii & \csvcoliii
+    \csvcoli & \csvcolii & \num{\csvcoliii}
 }
 \end{table}
 
@@ -75,7 +80,7 @@ We compare the following models:
     \item \textbf{SVM + TF--IDF}: a linear SVM on word/character TF--IDF features, a strong classical baseline for text classification \cite{joachims1998text,salton1988term}.
     \item \textbf{MiniLM + Logistic Regression}: sentence embeddings from Sentence-Transformers \texttt{all-MiniLM-L6-v2} \cite{reimers2019sentence,wang2020minilm} followed by logistic regression.
     \item \textbf{LSTM}: a recurrent model over token sequences \cite{hochreiter1997long}.
-    \item \textbf{Zero-shot (DistilBERT-MNLI)}: \texttt{typeform/distilbert-base-uncased-mnli} \cite{sanh2019distilbert} used with an NLI-based zero-shot pipeline \cite{wolf2020transformers}.
+    \item \textbf{Zero-shot (DistilBERT-MNLI)}: using the pretrained model \texttt{distilbert-base-uncased-mnli} \cite{sanh2019distilbert} with an NLI-based zero-shot pipeline \cite{wolf2020transformers}.
 \end{itemize}
 Hyperparameters are selected by cross-validation where applicable, and we report the best validation score together with test metrics (see Table~\ref{tab:summary}).
 
@@ -88,19 +93,20 @@ Effectiveness metrics include macro-F1 (primary) and accuracy. For statistical c
 \subsection{Effectiveness and Emissions}
 Table~\ref{tab:summary} reports test macro-F1 and accuracy alongside estimated test and train emissions. The SVM+TF--IDF model achieves the highest macro-F1 while keeping emissions low relative to neural alternatives. The keyword baseline is extremely efficient but lags in macro-F1. The zero-shot DistilBERT provides modest macro-F1 and comparatively higher emissions.
 
-\begin{table}[!t]
-\caption{Effectiveness and emissions summary. Values pulled directly from CSV results.}
+\begin{table*}[!t]
+\caption{Effectiveness and emissions summary.}
 \label{tab:summary}
 \centering
+\small
 \csvreader[
     tabular=lcccc,
     table head=\toprule model & macro-F1 & accuracy & test~emissions~(kg) & train~emissions~(kg) \\\midrule,
     late after line=\\,
     table foot=\bottomrule
 ]{../results/analysis/summary.csv}{}{
-    \modelname{\csvcoli} & \csvcolx & \csvcolvii & \csvcolvi & \csvcoliv
+    \expandafter\modelname\expandafter{\csvcoli} & \num{\csvcolx} & \num{\csvcolvii} & \num{\csvcolvi} & \num{\csvcoliv}
 }
-\end{table}
+\end{table*}
 
 Figure~\ref{fig:pareto} shows the Pareto frontier of macro-F1 vs test emissions. We prefer emissions-based comparisons over time-based ones, given emissions encode both runtime and CPU utilization under our CPU-only protocol.
 
@@ -118,13 +124,14 @@ We apply McNemar's test to paired predictions. Table~\ref{tab:mcnemar} lists pai
 \caption{McNemar pairwise tests (p-value and significance).}
 \label{tab:mcnemar}
 \centering
+\small
 \csvreader[
     tabular=llcc,
     table head=\toprule model\_a & model\_b & p\_value & significant \\\midrule,
     late after line=\\,
     table foot=\bottomrule
 ]{../results/analysis/significance_mcnemar.csv}{}{
-    \modelname{\csvcoli} & \modelname{\csvcolii} & \csvcolviii & \csvcolix
+    \expandafter\modelname\expandafter{\csvcoli} & \expandafter\modelname\expandafter{\csvcolii} & \num{\csvcolviii} & \csvcolix
 }
 \end{table}
 
