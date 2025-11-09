@@ -136,7 +136,7 @@ Beyond the metrics reported here, each classifier's confusion matrix and the lis
 
 \begin{figure}[!t]
     \centering
-    \includegraphics[width=.5\linewidth]{../results/svm_tfidf/analysis/confusion_matrix.png}
+    \includegraphics[width=.6\linewidth]{../results/svm_tfidf/analysis/confusion_matrix.png}
     \caption{Confusion matrix for SVM+TF-IDF on the test set.}
     \label{fig:cm-svm}
 \end{figure}
@@ -144,7 +144,7 @@ Beyond the metrics reported here, each classifier's confusion matrix and the lis
 \section{Discussion}
 Our results suggest that strong linear baselines remain competitive on short social media text: SVM+TF-IDF provides the best macro-F1 at a favorable emissions footprint. Pretrained embeddings (MiniLM) and LSTM narrow the effectiveness gap but incur higher emissions per test example. Zero-shot classification offers convenience and label flexibility without task-specific training, but its emissions are comparatively higher. The keyword baseline is the least energy consuming.
 
-Generalization to other hate speech datasets without retraining is plausible, but sensitivity to context matters. When syntax and lexicon shift substantially, syntax-based approaches such as regex and SVM+TF-IDF are likely to degrade most, while semantic approaches like sentence embeddings and LSTM (which leverages pretrained word embeddings) should be more robust.
+Generalization to other hate speech datasets without retraining is plausible, but sensitivity to context matters. When syntax and lexicon shift, syntax-based approaches such as regex and SVM+TF-IDF are likely to degrade the most, while semantic approaches like sentence embeddings and LSTM (leveraging pretrained word embeddings) should be more robust.
 
 \section{Limitations}
 Neural models such as LSTM, zero-shot transformers, and sentence-embedding pipelines can scale far beyond what we ran here: many hyperparameters, larger architectures, and heavier training that often improve accuracy but raise emissions. Due to hardware limits, we explored small configurations, whereas the SVM+TF-IDF baseline is near its optimal regime on this dataset. With more compute and a larger corpus, SVM+TF-IDF might improve slightly, but the other approaches could surpass it, at a higher carbon footprint.
